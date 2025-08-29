@@ -33,3 +33,8 @@ def guardar_catalogo():
         for product in catalogo:
             archivo_catalogo.write(f"{product['codigo']}, {product['nombre']}, {product['precio']}, {product['stock']}\n")
     
+def registrar_venta(ticket_texto):
+    with open ('ventas.txt', 'a') as archivo_venta:
+        archivo_venta.write(ticket_texto + '\n' + ' = ' * 40 + '\n')
+
+
