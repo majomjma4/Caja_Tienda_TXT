@@ -131,4 +131,37 @@ def ver_ventas():
             print("No se encontraron ventas con esa palabra clave. ")
     else:
         print("Opción inválida")
-        
+    
+if __name__=="__main__":
+    cargar_catalogo()
+    while True:
+        print("""
+    \nEscoja una opción:
+    1. Ver catálogo
+    2. Agregar al carrito
+    3. Ver carrito
+    4. Finalizar compra
+    5. Ver ventas
+    0. Salir
+    \n""")
+        opcion = input("\nIngrese la opción: ")
+        match opcion:
+            case '1':
+                ver_catalogo()
+            case '2':
+                agregar_carrito()
+            case '3':
+                ver_carrito()
+            case '4':
+                finalizar_compra()
+            case '5':
+                ver_ventas()
+            case '0':
+                print("\n ¡Gracias por su compra! Hasta luego. \n")
+                carrito.clear()
+                os.system('cls' if os.name == 'nt' else 'clear')
+     
+                continue
+            case _:
+                print("Opción inválida")
+            
