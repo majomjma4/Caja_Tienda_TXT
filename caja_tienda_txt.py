@@ -63,9 +63,31 @@ def agregar_carrito():
     
     carrito.append({'codigo': producto['codigo'], 'nombre': producto['nombre'], 'precio': producto['precio'], 'cantidad': cantidad})
     producto['stock'] -= cantidad
-    print(f"{cantidad} unidades de {producto['nombre']} ha sido agregado al carrito")
-    
+     
+    with open('carrito.txt', 'a') as archivo_carrito:
+        archivo_carrito.write(f"{producto['codigo']}, {producto['nombre']},{producto['precio']}, {cantidad}\n")
+        
+        print(f"{cantidad} unidades de {producto['nombre']} ha sido agregado al carrito")
+        
 def ver_carrito():
+    if os.path.exists("carrito.txt"):
+        with open("carrito.txt", "r") as archivo_carrito:
+            lineas = archivo_carrito.readlines()
+        carrito.clear()
+        
+        for linea in lineas:
+            if "x" in linea or "Total" in linea or "---" in linea:
+                continue
+            partes = linea.strip().split(",")
+            if len(partes) == 4:
+                    codigo, nombre, precio, cantidad = partes
+                    carrito.append({
+                        'codigo': codigo.strip(),
+                        'nombre': nombre.strip(),
+                        'precio': float(precio.strip()),
+                        'cantidad': int(cantidad.strip())
+                    })
+                
     if not carrito:
         print("Carrito vacío")
         return
@@ -81,7 +103,7 @@ def finalizar_compra():
     if not carrito:
         print("Carrito vacío")
         return
-    confirm = input("Desea finalizar la compra (si/no): ").strip.lower()
+    confirm = input("Desea finalizar la compra (si/no): ").strip().lower()
     if confirm != 'si':
         print("Compra cancelada")
         return
@@ -106,6 +128,8 @@ def finalizar_compra():
     registrar_venta(ticket)
     guardar_catalogo()
     carrito.clear()
+    with open("carrito.txt", "w") as archivo_carrito:
+        archivo_carrito.write("")
     
 def ver_ventas():
     if not os.path.exists('ventas.txt'):
