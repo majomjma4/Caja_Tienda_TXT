@@ -65,3 +65,46 @@ def agregar_carrito():
     producto['stock'] -= cantidad
     print(f"{cantidad} unidades de {producto['nombre']} ha sido agregado al carrito")
     
+def ver_carrito():
+    if not carrito:
+        print("Carrito vacío")
+        return
+    total = 0
+    print("\n--- CARRITO DE COMPRAS --- ")
+    for car in carrito:
+        subtotal = car['precio'] * car['cantidad']
+        total += subtotal
+        print(f"{car['nombre']} x {car['cantidad']} = ${subtotal:.2f}")
+    print(f"Total: ${total:.2f}")
+
+def finalizar_compra():
+    if not carrito:
+        print("Carrito vacío")
+        return
+    confirm = input("Desea finalizar la compra (si/no): ").strip.lower()
+    if confirm != 'si':
+        print("Compra cancelada")
+        return
+   
+    total = sum(car['precio'] * car['cantidad'] for car in carrito)
+    descuento = 0.10 if total > 50 else 0.05 if total > 20 else 0
+    total_desc = total * (1-descuento)
+    iva = total_desc*0.15
+    total_final = total_desc + iva
+    ticket = f"FACTURA \nFecha {datetime.now()}\n " + "-" * 40 + "\n"
+    
+    for car in carrito:
+        ticket += f"{car['nombre']} x {car['cantidad']} = ${car['precio']} * {car['cantidad']:.2f}\n"
+    ticket += f"Total sin descuento: ${total:.2f}\n"
+    
+    if descuento > 0:
+        ticket += f"Descuento: {int(descuento*100)}% | Total con descuento: ${total_desc:.2f}\n"
+    ticket += f"IVA 15%: ${iva:.2f}\n Total a Pagar: ${total_final:.2f}"
+    print("\n--- FACTURA ---")
+    print(ticket)
+    
+    registrar_venta(ticket)
+    guardar_catalogo()
+    carrito.clear()
+    
+    
