@@ -38,3 +38,30 @@ def registrar_venta(ticket_texto):
         archivo_venta.write(ticket_texto + '\n' + ' = ' * 40 + '\n')
 
 
+def ver_catalogo():
+    print("\n--- CATÁLOGO ---")
+    for product in catalogo:
+        print(f"{product['codigo']} | {product['nombre']} | {product['precio']} | {product['stock']} ")
+
+def agregar_carrito():
+    codigo = input("Ingrese el código del producto que desea agregar al carrito: ").strip().upper()
+    producto = next((product for product in catalogo if product['codigo'] == codigo), None)
+    if not producto:
+        print("Producto no encontrado")
+        return
+    try:
+        cantidad = int(input("Ingrese la cantidad a comprar: "))
+    except ValueError:
+        print("Cantidad inválida")
+        return
+    if cantidad <= 0:
+        print("La cantidad deber ser mayor a o")
+        return
+    if cantidad > producto['stock']:
+        print(f"Stock insuficiente, disponible: {producto['stock']}")
+        return
+    
+    carrito.append({'codigo': producto['codigo'], 'nombre': producto['nombre'], 'precio': producto['precio'], 'cantidad': cantidad})
+    producto['stock'] -= cantidad
+    print(f"{cantidad} unidades de {producto['nombre']} ha sido agregado al carrito")
+    
