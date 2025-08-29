@@ -107,4 +107,28 @@ def finalizar_compra():
     guardar_catalogo()
     carrito.clear()
     
+def ver_ventas():
+    if not os.path.exists('ventas.txt'):
+        print("No hay ventas registradas")
+        return
     
+    with open('ventas.txt', 'r') as factu:
+        ventas_todas = factu.read()
+        
+    opcion = input("Desea ver todas las ventas o buscar una venta especifica? (todas/buscar): ").strip().lower()
+    if opcion == "todas":
+        print(ventas_todas)
+    elif opcion == "buscar":
+        search = input("Ingrese la palabra clave para buscar (producto o fecha): ").strip().lower()
+        ventas_filtradas = []
+        for bloque in ventas_todas.split("="*40):
+            if search in bloque.lower():
+                ventas_filtradas.append(bloque)
+        if ventas_filtradas:
+            print("\n--- Ventas encontradas ---")
+            print("\n".join(ventas_filtradas))
+        else:
+            print("No se encontraron ventas con esa palabra clave. ")
+    else:
+        print("Opción inválida")
+        
