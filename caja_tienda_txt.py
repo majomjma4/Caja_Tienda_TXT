@@ -6,13 +6,13 @@ carrito = []
 
 def cargar_catalogo():
     if not os.path.exists('catalogo.txt'):
-        with open('catalogo.txt', 'w') as f:
-            f.write("P001,Azucar,2.50,100\n")
-            f.write("P002,Sal,1.00,100\n")
-            f.write("P003,Atun,1.65,100\n")
-            f.write("P004,Fideos,0.75,100\n")
-            f.write("P005,Cola,1.00,100\n")
-            f.write("P006,Jugo,0.50,100\n")
+        with open('catalogo.txt', 'w') as archivo_catalogo:
+            archivo_catalogo.write("P001,Azucar,2.50,100\n")
+            archivo_catalogo.write("P002,Sal,1.00,100\n")
+            archivo_catalogo.write("P003,Atun,1.65,100\n")
+            archivo_catalogo.write("P004,Fideos,0.75,100\n")
+            archivo_catalogo.write("P005,Cola,1.00,100\n")
+            archivo_catalogo.write("P006,Jugo,0.50,100\n")
     catalogo.clear()
     
     with open('catalogo.txt', 'r') as archivo_catalogo:
