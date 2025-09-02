@@ -12,6 +12,7 @@ def leer_archivo(nombre_archivo):
         open(nombre_archivo, ' w').close()
     with open(nombre_archivo, 'r', encoding = 'utf-8') as f:
         return f.readlines()
+    
 def escribir_archivo(nombre_archivo, lineas, modo ='w'):
     with open(nombre_archivo, modo, encoding='utf-8') as f:
         f.writelines(lineas)
@@ -58,82 +59,68 @@ def agregar_producto():
     print(f"Producto {nombre} agregado al catálogo. ")
         
     
-def registrar_venta(ticket_texto):
-    with open ('ventas.txt', 'a') as archivo_venta:
-        archivo_venta.write(ticket_texto + '\n' + ' = ' * 40 + '\n')        
-
 def agregar_carrito():
     codigo = input("Ingrese el código del producto que desea agregar al carrito: ").strip().upper()
     producto = next((product for product in catalogo if product['codigo'] == codigo), None)
     if not producto:
-        print("Producto no encontrado")
-        return
+        print("Producto no encontrado"); return
     try:
         cantidad = int(input("Ingrese la cantidad a comprar: "))
     except ValueError:
-        print("Cantidad inválida")
-        return
+        print("Cantidad inválida"); return
     if cantidad <= 0:
-        print("La cantidad deber ser mayor a o")
-        return
+        print("La cantidad deber ser mayor a 0"); return
     if cantidad > producto['stock']:
-        print(f"Stock insuficiente, disponible: {producto['stock']}")
-        return
+        print(f"Stock insuficiente, disponible: {producto['stock']}"); return
     
     carrito.append({'codigo': producto['codigo'], 'nombre': producto['nombre'], 'precio': producto['precio'], 'cantidad': cantidad})
     producto['stock'] -= cantidad
      
-    with open('carrito.txt', 'a') as archivo_carrito:
+    with open('carrito.txt', 'a', encoding='utf-8') as archivo_carrito:
         archivo_carrito.write(f"{producto['codigo']}, {producto['nombre']},{producto['precio']}, {cantidad}\n")
         
         print(f"{cantidad} unidades de {producto['nombre']} ha sido agregado al carrito")
-        
+       
 def ver_carrito():
     if os.path.exists("carrito.txt"):
-        with open("carrito.txt", "r") as archivo_carrito:
-            lineas = archivo_carrito.readlines()
-        carrito.clear()
+        with open("carrito.txt", "r", encoding='utf-8') as archivo_carrito:
+            for linea in archivo_carrito:
+                partes = linea.strip().split(",")
+                if len(partes) == 4:
+                        codigo, nombre, precio, cantidad = partes
+                        carrito.append({
+                            'codigo': codigo.strip(),
+                            'nombre': nombre.strip(),
+                            'precio': float(precio.strip()),
+                            'cantidad': int(cantidad.strip())
+                        })
+                    
+        if not carrito:
+            print("Carrito vacío")
+            return
         
-        for linea in lineas:
-            if "x" in linea or "Total" in linea or "---" in linea:
-                continue
-            partes = linea.strip().split(",")
-            if len(partes) == 4:
-                    codigo, nombre, precio, cantidad = partes
-                    carrito.append({
-                        'codigo': codigo.strip(),
-                        'nombre': nombre.strip(),
-                        'precio': float(precio.strip()),
-                        'cantidad': int(cantidad.strip())
-                    })
-                
-    if not carrito:
-        print("Carrito vacío")
-        return
-    total = 0
-    print("\n--- CARRITO DE COMPRAS --- ")
-    for car in carrito:
-        subtotal = car['precio'] * car['cantidad']
-        total += subtotal
-        print(f"{car['nombre']} x {car['cantidad']} = ${subtotal:.2f}")
-    print(f"Total: ${total:.2f}")
-
+        total = 0
+        print("\n--- CARRITO DE COMPRAS --- ")
+        for car in carrito:
+            subtotal = car['precio'] * car['cantidad']
+            total += subtotal
+            print(f"{car['nombre']} x {car['cantidad']} = ${subtotal:.2f}")
+        print(f"Total: ${total:.2f}")
+        
 def finalizar_compra():
     if not carrito:
-        print("Carrito vacío")
-        return
+        print("Carrito vacío"); return
     confirm = input("Desea finalizar la compra (si/no): ").strip().lower()
     if confirm != 'si':
-        print("Compra cancelada")
-        return
+        print("Compra cancelada"); return
    
     total = sum(car['precio'] * car['cantidad'] for car in carrito)
     descuento = 0.10 if total > 50 else 0.05 if total > 20 else 0
     total_desc = total * (1-descuento)
     iva = total_desc*0.15
     total_final = total_desc + iva
-    ticket = f"FACTURA \nFecha {datetime.now()}\n " + "-" * 40 + "\n"
     
+    ticket = f"FACTURA \nFecha {datetime.now()}\n " + "-" * 40 + "\n"
     for car in carrito:
         ticket += f"{car['nombre']} x {car['cantidad']} = ${car['precio']} * {car['cantidad']:.2f}\n"
     ticket += f"Total sin descuento: ${total:.2f}\n"
@@ -147,13 +134,16 @@ def finalizar_compra():
     registrar_venta(ticket)
     guardar_catalogo()
     carrito.clear()
+    
     with open("carrito.txt", "w") as archivo_carrito:
         archivo_carrito.write("")
+        
+def registrar_venta(ticket):
+    escribir_archivo(VENTAS_FILE, [ticket], modo='a')        
     
 def ver_ventas():
     if not os.path.exists('ventas.txt'):
-        print("No hay ventas registradas")
-        return
+        print("No hay ventas registradas"); return
     
     with open('ventas.txt', 'r') as factu:
         ventas_todas = factu.read()
@@ -163,10 +153,7 @@ def ver_ventas():
         print(ventas_todas)
     elif opcion == "buscar":
         search = input("Ingrese la palabra clave para buscar (producto o fecha): ").strip().lower()
-        ventas_filtradas = []
-        for bloque in ventas_todas.split("="*40):
-            if search in bloque.lower():
-                ventas_filtradas.append(bloque)
+        ventas_filtradas =[ventas for ventas in ventas_todas.split('='*40)if search in ventas.lower()]
         if ventas_filtradas:
             print("\n--- Ventas encontradas ---")
             print("\n".join(ventas_filtradas))
@@ -188,12 +175,12 @@ if __name__=="__main__":
     6. Agregar Producto 
     0. Salir
     \n""")
-        opcion = input("\nIngrese la opción: ")
+        opcion = input("\nIngrese la opción: ").strip()
         if opcion == "1": ver_catalogo()
         elif opcion == "2": agregar_carrito()
         elif opcion == "3": ver_carrito()
         elif opcion == "4": finalizar_compra()
         elif opcion == "5": ver_ventas()
         elif opcion == "6": agregar_producto()
-        elif opcion == "0": print("¡Gracias por preferirnos, Hasta luego!")
+        elif opcion == "0": print("¡Gracias por preferirnos! Hasta luego"); break
         else: print("Opción inválida")
