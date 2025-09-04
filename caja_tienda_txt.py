@@ -4,35 +4,35 @@ from datetime import datetime
 
 CATALOGO_FILE = 'catalogo.txt'
 VENTAS_FILE = 'ventas.txt'
-
+CARRITO_FILE = 'carrito.txt'
 catalogo, carrito = [], []
 
 def leer_archivo(nombre_archivo):
     if not os.path.exists(nombre_archivo):
-        open(nombre_archivo, ' w').close()
-    with open(nombre_archivo, 'r', encoding = 'utf-8') as f:
-        return f.readlines()
+        open(nombre_archivo, 'w', encoding='utf-8').close()
+    with open(nombre_archivo, 'r', encoding = 'utf-8') as f: return f.readlines()
     
 def escribir_archivo(nombre_archivo, lineas, modo ='w'):
-    with open(nombre_archivo, modo, encoding='utf-8') as f:
-        f.writelines(lineas)
+    with open(nombre_archivo, modo, encoding='utf-8') as f: f.writelines(lineas)
 
 def cargar_catalogo():
     catalogo.clear()
-    lineas = leer_archivo(CATALOGO_FILE)
-    for linea in lineas:
+    for linea in leer_archivo(CATALOGO_FILE):
         partes = linea.strip().split(",")
         if len(partes) == 4:
-            codigo, nombre, precio, stock = linea.strip().split(",") 
-            catalogo.append({
-                'codigo': codigo.strip().upper(),
-                'nombre': nombre.strip(),
-                'precio': float(precio.strip()),
-                'stock': int(stock.strip())
-            })
+            try:
+                codigo, nombre, precio, stock = partes 
+                catalogo.append({
+                    'codigo': codigo.strip().upper(),
+                    'nombre': nombre.strip(),
+                    'precio': float(precio.strip()),
+                    'stock': int(stock.strip())
+                })
+            except ValueError:
+                continue
 
 def guardar_catalogo():
-    lineas = [f"{product['codigo']}, {product['nombre']}, {product['precio']}, {product['stock']}\n" for product in catalogo]
+    lineas = [f"{product['codigo']},{product['nombre']},{product['precio']},{product['stock']}\n" for product in catalogo]
     escribir_archivo(CATALOGO_FILE, lineas)
             
 def ver_catalogo():
@@ -44,126 +44,115 @@ def ver_catalogo():
       
 def agregar_producto():
     codigo = input("Ingrese el código del producto: ").strip().upper()
-    if any(product['codigo'] == codigo for product in catalogo):
-        print("Ese código ya existe. "); return
-    nombre = input("Ingrese el nombre del producto: ")
+    if not codigo or any(product['codigo'] == codigo for product in catalogo): print("Código inválido o existente "); return
+         
+    nombre = input("Ingrese el nombre del producto: ").strip()
+    if not nombre: print("El nombre no puede estar vacío."); return
     
     try:
-        precio = float(input("Ingrese el precio del producto: "))
-        stock = int(input("Ingrese la cantidad de producto en stock: "))
+        precio = float(input("Ingrese el precio del producto: ").strip())
+        stock = int(input("Ingrese la cantidad de producto en stock: ").strip())
+        if precio <= 0 or stock < 0: raise ValueError
         
-    except ValueError:
-        print("Datos inválidos. "); return
+    except ValueError: print("Datos inválidos. Precio debe ser > 0 y stock >= 0 "); return
     catalogo.append({'codigo': codigo,'nombre': nombre, 'precio': precio, 'stock': stock })
-    guardar_catalogo()
-    print(f"Producto {nombre} agregado al catálogo. ")
-        
-    
+    guardar_catalogo(); print(f"Producto {nombre} agregado al catálogo. ")
+
+def cargar_carrito():
+    carrito.clear()
+    for linea in leer_archivo(CARRITO_FILE):
+        partes = linea.strip().split(',')
+        if len(partes)== 4:
+            try:
+                codigo,nombre,precio,cantidad = partes
+                carrito.append({
+                    'codigo': codigo.strip(),
+                    'nombre': nombre.strip(),
+                    'precio': float(precio.strip()),
+                    'cantidad': int(cantidad.strip())
+                })
+            except ValueError: 
+                continue
+            
+def guardar_carrito():
+    lineas = [f"{car['codigo']},{car['nombre']},{car['precio']},{car['cantidad']}\n" for car in carrito]
+    escribir_archivo(CARRITO_FILE, lineas)        
+
 def agregar_carrito():
+    cargar_carrito()
     codigo = input("Ingrese el código del producto que desea agregar al carrito: ").strip().upper()
     producto = next((product for product in catalogo if product['codigo'] == codigo), None)
-    if not producto:
-        print("Producto no encontrado"); return
-    try:
-        cantidad = int(input("Ingrese la cantidad a comprar: "))
-    except ValueError:
-        print("Cantidad inválida"); return
-    if cantidad <= 0:
-        print("La cantidad deber ser mayor a 0"); return
-    if cantidad > producto['stock']:
-        print(f"Stock insuficiente, disponible: {producto['stock']}"); return
-    
-    carrito.append({'codigo': producto['codigo'], 'nombre': producto['nombre'], 'precio': producto['precio'], 'cantidad': cantidad})
-    producto['stock'] -= cantidad
-     
-    with open('carrito.txt', 'a', encoding='utf-8') as archivo_carrito:
-        archivo_carrito.write(f"{producto['codigo']}, {producto['nombre']},{producto['precio']}, {cantidad}\n")
+    if not producto: print("Producto no encontrado"); return
+    try: cantidad = int(input("Ingrese la cantidad a comprar: ").strip()); assert cantidad>0    
+    except: print("Cantidad inválida. Debe ser un número entero mayor a 0."); return
         
-        print(f"{cantidad} unidades de {producto['nombre']} ha sido agregado al carrito")
+    if cantidad > producto['stock']: print(f"Stock insuficiente. Disponible: {producto['stock']}"); return
+    
+    item = next((car for car in carrito if car['codigo'] == codigo), None)
+    if item: item['cantidad'] += cantidad
+    else: carrito.append({'codigo': producto['codigo'], 'nombre': producto['nombre'], 'precio': producto['precio'], 'cantidad': cantidad})
+    producto['stock'] -= cantidad
+    
+    guardar_catalogo(); guardar_carrito()
+    print(f"{cantidad} unidades de {producto['nombre']} ha sido agregado al carrito")
        
 def ver_carrito():
-    if os.path.exists("carrito.txt"):
-        with open("carrito.txt", "r", encoding='utf-8') as archivo_carrito:
-            for linea in archivo_carrito:
-                partes = linea.strip().split(",")
-                if len(partes) == 4:
-                        codigo, nombre, precio, cantidad = partes
-                        carrito.append({
-                            'codigo': codigo.strip(),
-                            'nombre': nombre.strip(),
-                            'precio': float(precio.strip()),
-                            'cantidad': int(cantidad.strip())
-                        })
-                    
-        if not carrito:
-            print("Carrito vacío")
-            return
+    cargar_carrito()             
+    if not carrito: print("Carrito vacío"); return
         
-        total = 0
-        print("\n--- CARRITO DE COMPRAS --- ")
-        for car in carrito:
-            subtotal = car['precio'] * car['cantidad']
-            total += subtotal
-            print(f"{car['nombre']} x {car['cantidad']} = ${subtotal:.2f}")
-        print(f"Total: ${total:.2f}")
+    total = 0
+    print("\n--- CARRITO DE COMPRAS --- ")
+    for car in carrito:
+        subtotal = car['precio'] * car['cantidad']
+        total += subtotal
+        print(f"{car['nombre']} x {car['cantidad']} = ${subtotal:.2f}")
+    print(f"Total: ${total:.2f}")
         
 def finalizar_compra():
-    if not carrito:
-        print("Carrito vacío"); return
-    confirm = input("Desea finalizar la compra (si/no): ").strip().lower()
-    if confirm != 'si':
-        print("Compra cancelada"); return
+    cargar_carrito()
+    if not carrito: print("Carrito vacío"); return
+    if input("Desea finalizar la compra (si/no): ").strip().lower()!= 'si': print("Compra cancelada"); return
    
     total = sum(car['precio'] * car['cantidad'] for car in carrito)
-    descuento = 0.10 if total > 50 else 0.05 if total > 20 else 0
-    total_desc = total * (1-descuento)
-    iva = total_desc*0.15
-    total_final = total_desc + iva
+    iva = total * 0.15; 
+    subtotal_iva = total + iva
+    descuento = 0.10 if subtotal_iva > 50 else 0.05 if subtotal_iva > 20 else 0
+    total_final = subtotal_iva * (1-descuento)
     
-    ticket = f"FACTURA \nFecha {datetime.now()}\n " + "-" * 40 + "\n"
+    ticket = f"\n{'='*40}\nFACTURA \nFecha: {datetime.now()}\n {"-" * 40}\n"
     for car in carrito:
-        ticket += f"{car['nombre']} x {car['cantidad']} = ${car['precio']} * {car['cantidad']:.2f}\n"
-    ticket += f"Total sin descuento: ${total:.2f}\n"
+        subtotal_producto = car['precio'] * car['cantidad']
+        subtotal_producto_iva = subtotal_producto * 1.15
+        ticket += f"{car['nombre']} x {car['cantidad']} = ${subtotal_producto:.2f}\n "
+        
+    ticket += f"\nTotal sin IVA: ${total:.2f}\n"
+    ticket += f"IVA 15%: ${iva:.2f}\n Subtotal con IVA: ${subtotal_iva:.2f}\n "
     
-    if descuento > 0:
-        ticket += f"Descuento: {int(descuento*100)}% | Total con descuento: ${total_desc:.2f}\n"
-    ticket += f"IVA 15%: ${iva:.2f}\n Total a Pagar: ${total_final:.2f}"
-    print("\n--- FACTURA ---")
+    if descuento > 0: ticket += f"Descuento: {int(descuento*100)}%\n"
+    ticket += f"TOTAL A PAGAR: ${total_final:.2f}\n{'='*40}\n"
     print(ticket)
     
     registrar_venta(ticket)
-    guardar_catalogo()
     carrito.clear()
-    
-    with open("carrito.txt", "w") as archivo_carrito:
-        archivo_carrito.write("")
+    guardar_carrito()
+    guardar_catalogo()
         
-def registrar_venta(ticket):
-    escribir_archivo(VENTAS_FILE, [ticket], modo='a')        
+def registrar_venta(ticket):escribir_archivo(VENTAS_FILE, [ticket], modo='a')        
     
 def ver_ventas():
-    if not os.path.exists('ventas.txt'):
-        print("No hay ventas registradas"); return
-    
-    with open('ventas.txt', 'r') as factu:
-        ventas_todas = factu.read()
-        
+    if not os.path.exists(VENTAS_FILE): print("No hay ventas registradas"); return
+    ventas_todas = "".join(leer_archivo(VENTAS_FILE))
     opcion = input("Desea ver todas las ventas o buscar una venta especifica? (todas/buscar): ").strip().lower()
-    if opcion == "todas":
-        print(ventas_todas)
+    if opcion == "todas": print(ventas_todas)
     elif opcion == "buscar":
         search = input("Ingrese la palabra clave para buscar (producto o fecha): ").strip().lower()
         ventas_filtradas =[ventas for ventas in ventas_todas.split('='*40)if search in ventas.lower()]
-        if ventas_filtradas:
-            print("\n--- Ventas encontradas ---")
-            print("\n".join(ventas_filtradas))
-        else:
-            print("No se encontraron ventas con esa palabra clave. ")
+        print("\n".join(ventas_filtradas) if ventas_filtradas else "No se encontraron ventas con esa palabra clave. " )
     else:
         print("Opción inválida")
     
 if __name__=="__main__":
-    cargar_catalogo()
+    cargar_catalogo(); cargar_carrito()
     while True:
         print("""
     \nEscoja una opción:
