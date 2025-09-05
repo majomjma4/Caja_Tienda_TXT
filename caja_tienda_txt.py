@@ -43,18 +43,19 @@ def ver_catalogo():
             print(f"{product['codigo']} | {product['nombre']} | ${product['precio']:.2f} | {product['stock']} ")
       
 def agregar_producto():
-    codigo = input("Ingrese el código del producto: ").strip().upper()
-    if not codigo or any(product['codigo'] == codigo for product in catalogo): print("Código inválido o existente "); return
-         
-    nombre = input("Ingrese el nombre del producto: ").strip()
-    if not nombre: print("El nombre no puede estar vacío."); return
-    
+    producto = input("Ingrese el producto en el formato (codigo, nombre, precio, stock): ").strip()
     try:
-        precio = float(input("Ingrese el precio del producto: ").strip())
-        stock = int(input("Ingrese la cantidad de producto en stock: ").strip())
-        if precio <= 0 or stock < 0: raise ValueError
+        codigo, nombre, precio, stock = [x.strip() for x in producto.split(',')]
+        codigo = codigo.upper()
+        precio = float(precio)
+        stock = int(stock)
         
-    except ValueError: print("Datos inválidos. Precio debe ser > 0 y stock >= 0 "); return
+        if not codigo or not nombre or precio <= 0 or stock <0:
+            raise ValueError
+    except Exception:
+        print("Formato incorrecto. Use: codigo, nombre, precio, stock")
+        return
+    
     catalogo.append({'codigo': codigo,'nombre': nombre, 'precio': precio, 'stock': stock })
     guardar_catalogo(); print(f"Producto {nombre} agregado al catálogo. ")
 
