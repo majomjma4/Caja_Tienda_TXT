@@ -37,10 +37,11 @@ def guardar_catalogo():
             
 def ver_catalogo():
         if not catalogo: print("Catálogo vació. "); return
-        
-        print("\n------ CATÁLOGO ------")
+        print("\n------------------------- CATÁLOGO -------------------------\n")
+        print(f"{'CODIGO':<15} {'NOMBRE':<16} {'PRECIO':<13} {'STOCK':>10}")
+        print("-"*60)
         for product in catalogo:
-            print(f"{product['codigo']} | {product['nombre']} | ${product['precio']:.2f} | {product['stock']} ")
+            print(f"{product['codigo']:<10} | {product['nombre']:<15} | ${product['precio']:>10.2f} | {product['stock']:>10} ")
       
 def agregar_producto():
     producto = input("Ingrese el producto en el formato (codigo, nombre, precio, stock): ").strip()
@@ -102,11 +103,11 @@ def ver_carrito():
     if not carrito: print("Carrito vacío"); return
         
     total = 0
-    print("\n--- CARRITO DE COMPRAS --- ")
+    print("\n--- CARRITO DE COMPRAS --- \n")
     for car in carrito:
         subtotal = car['precio'] * car['cantidad']
         total += subtotal
-        print(f"{car['nombre']} x {car['cantidad']} = ${subtotal:.2f}")
+        print(f"{car['nombre']}    x    {car['cantidad']}    = ${subtotal:.2f}")
     print(f"Total: ${total:.2f}")
         
 def finalizar_compra():
@@ -127,7 +128,7 @@ def finalizar_compra():
         ticket += f"{car['nombre']} x {car['cantidad']} = ${subtotal_producto:.2f}\n "
         
     ticket += f"\nTotal sin IVA: ${total:.2f}\n"
-    ticket += f"IVA 15%: ${iva:.2f}\n Subtotal con IVA: ${subtotal_iva:.2f}\n "
+    ticket += f"IVA 15%: ${iva:.2f}\nSubtotal con IVA: ${subtotal_iva:.2f}\n "
     
     if descuento > 0: ticket += f"Descuento: {int(descuento*100)}%\n"
     ticket += f"TOTAL A PAGAR: ${total_final:.2f}\n{'='*40}\n"
@@ -150,7 +151,7 @@ def ver_ventas():
         ventas_filtradas =[ventas for ventas in ventas_todas.split('='*40)if search in ventas.lower()]
         print("\n".join(ventas_filtradas) if ventas_filtradas else "No se encontraron ventas con esa palabra clave. " )
     else:
-        print("Opción inválida")
+        print("Opción inválida. Ingrese (si o no)")
     
 if __name__=="__main__":
     cargar_catalogo(); cargar_carrito()
